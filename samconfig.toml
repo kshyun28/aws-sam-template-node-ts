@@ -1,0 +1,41 @@
+version = 0.1
+[default.build.parameters]
+beta_features = true
+[default.sync.parameters]
+beta_features = true
+
+[develop]
+[develop.deploy]
+[develop.deploy.parameters]
+stack_name = "stack-name-develop" # Update Values
+s3_bucket = "s3-sample-bucket-name" # Update Values
+s3_prefix = "sam/stack-name/develop" # Update Values
+region = "ap-southeast-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
+disable_rollback = false
+image_repositories = []
+
+[staging]
+[staging.deploy]
+[staging.deploy.parameters]
+stack_name = "stack-name-staging" # Update Values
+s3_bucket = "s3-sample-bucket-name" # Update Values
+s3_prefix = "sam/stack-name/staging" # Update Values
+region = "ap-southeast-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
+disable_rollback = false
+image_repositories = []
+
+[production]
+[production.deploy]
+[production.deploy.parameters]
+stack_name = "stack-name-production" # Update Values
+s3_bucket = "s3-sample-bucket-name" # Update Values
+s3_prefix = "sam/stack-name/production" # Update Values
+region = "ap-southeast-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
+disable_rollback = false
+image_repositories = []

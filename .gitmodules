@@ -1,0 +1,6 @@
+[submodule "layers/common-layer"]
+	path = layers/common-layer
+	url = git@github.com:kshyun28/common-layer.git
+[submodule "layers/node-layer"]
+	path = layers/node-layer
+	url = git@github.com:kshyun28/node-layer.git

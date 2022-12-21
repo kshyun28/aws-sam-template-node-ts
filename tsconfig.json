@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "target": "es2020",
+        "strict": true,
+        "preserveConstEnums": true,
+        "noEmit": false,
+        "sourceMap": false,
+        "module": "CommonJS",
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "outDir": "./dist",
+        "baseUrl": ".",
+        "paths": {
+            "/opt/nodejs/*": ["layers/common-layer/src/*"]
+        }
+    },
+    "exclude": ["node_modules", "dist", "jest.config.ts"]
+}

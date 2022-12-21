@@ -1,0 +1,221 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Globals:
+    Function:
+        Architectures:
+            - arm64
+        CodeUri: .
+        Runtime: nodejs16.x
+        Timeout: 29
+        Layers:
+            - arn:aws:lambda:ap-southeast-1:499202726088:layer:CommonNodeModulesLayer:1
+            - arn:aws:lambda:ap-southeast-1:499202726088:layer:CommonLayer:1
+        MemorySize: 128
+        Environment:
+            Variables:
+                TABLE_NAME: !Ref DynamoDBTable
+                POWERTOOLS_SERVICE_NAME: service-name # Update this
+                POWERTOOLS_METRICS_NAMESPACE: service-name # Update this
+                POWERTOOLS_LOGGER_LOG_EVENT: false # Set to false in production
+Description: > # Update this
+    serverless-template
+
+    SAM Template for serverless-template
+
+Parameters:
+    Environment:
+        Type: String
+        AllowedValues:
+            - production
+            - staging
+            - develop
+    # EnvDomain:
+    #     Type: String
+    #     Description: Domain to use for this environment
+
+Resources:
+    APIGatewayV1:
+        Type: AWS::Serverless::Api
+        Properties:
+            StageName: !Ref Environment
+            Cors:
+                AllowHeaders: "'*'"
+                AllowMethods: "'POST, GET, OPTIONS'"
+                AllowOrigin: "'*'"
+
+    # APIGatewayMappingV1:
+    #     Type: 'AWS::ApiGatewayV2::ApiMapping'
+    #     DependsOn: APIGatewayStage # Fix for invalid stage identifier https://github.com/aws/serverless-application-model/issues/192
+    #     Properties:
+    #         DomainName: !Ref EnvDomain
+    #         ApiId: !Ref APIGatewayV1
+    #         ApiMappingKey: v1/base-path # Update this
+    #         Stage: !Ref Environment
+
+    APIGatewayV2:
+        Type: AWS::Serverless::Api
+        Properties:
+            StageName: !Ref Environment
+            Cors:
+                AllowHeaders: "'*'"
+                AllowMethods: "'POST, GET, OPTIONS'"
+                AllowOrigin: "'*'"
+
+    # APIGatewayMappingV2:
+    #     Type: 'AWS::ApiGatewayV2::ApiMapping'
+    #     DependsOn: APIGatewayStage # Fix for invalid stage identifier https://github.com/aws/serverless-application-model/issues/192
+    #     Properties:
+    #         DomainName: !Ref EnvDomain
+    #         ApiId: !Ref APIGatewayV2
+    #         ApiMappingKey: v2/base-path # Update this
+    #         Stage: !Ref Environment
+
+    GetV1Function:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: !Sub
+                - ${StackName}-GetV1
+                - { StackName: !Ref AWS::StackName }
+            Description: Get from DynamoDB
+            Events:
+                API:
+                    Type: Api
+                    Properties:
+                        Path: /{id}
+                        Method: get
+                        RestApiId: !Ref APIGatewayV1
+            Handler: get.handler
+            Policies:
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref DynamoDBTable
+        Metadata: # Manage esbuild properties
+            BuildArchitecture: arm64
+            BuildMethod: esbuild
+            BuildProperties:
+                Minify: false
+                Target: 'es2020'
+                EntryPoints:
+                    - src/handlers/v1/get.ts
+                External: # Define external dependencies to be loaded as Layers
+                    - aws-sdk
+                    - /opt/nodejs/utils/*
+                    - '@middy/core'
+                    - '@aws-lambda-powertools/*'
+
+    PostV1Function:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: !Sub
+                - ${StackName}-PostV1
+                - { StackName: !Ref AWS::StackName }
+            Description: Post to DynamoDB
+            Events:
+                API:
+                    Type: Api
+                    Properties:
+                        Path: /
+                        Method: post
+                        RestApiId: !Ref APIGatewayV1
+            Handler: post.handler
+            Policies:
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref DynamoDBTable
+        Metadata: # Manage esbuild properties
+            BuildMethod: esbuild
+            BuildProperties:
+                Minify: false
+                Target: 'es2020'
+                EntryPoints:
+                    - src/handlers/v1/post.ts
+                External: # Define external dependencies to be loaded as Layers
+                    - aws-sdk
+                    - /opt/nodejs/utils/*
+                    - '@middy/core'
+                    - '@aws-lambda-powertools/*'
+
+    GetV2Function:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: !Sub
+                - ${StackName}-GetV2
+                - { StackName: !Ref AWS::StackName }
+            Description: Get from DynamoDB
+            Events:
+                API:
+                    Type: Api
+                    Properties:
+                        Path: /{id}
+                        Method: get
+                        RestApiId: !Ref APIGatewayV2
+            Handler: get.handler
+            Policies:
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref DynamoDBTable
+        Metadata: # Manage esbuild properties
+            BuildArchitecture: arm64
+            BuildMethod: esbuild
+            BuildProperties:
+                Minify: false
+                Target: 'es2020'
+                EntryPoints:
+                    - src/handlers/v2/get.ts
+                External: # Define external dependencies to be loaded as Layers
+                    - aws-sdk
+                    - /opt/nodejs/utils/*
+                    - '@middy/core'
+                    - '@aws-lambda-powertools/*'
+
+    PostV2Function:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: !Sub
+                - ${StackName}-PostV2
+                - { StackName: !Ref AWS::StackName }
+            Description: Post to DynamoDB
+            Events:
+                API:
+                    Type: Api
+                    Properties:
+                        Path: /
+                        Method: post
+                        RestApiId: !Ref APIGatewayV2
+            Handler: post.handler
+            Policies:
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref DynamoDBTable
+        Metadata: # Manage esbuild properties
+            BuildMethod: esbuild
+            BuildProperties:
+                Minify: false
+                Target: 'es2020'
+                EntryPoints:
+                    - src/handlers/v2/post.ts
+                External: # Define external dependencies to be loaded as Layers
+                    - aws-sdk
+                    - /opt/nodejs/utils/*
+                    - '@middy/core'
+                    - '@aws-lambda-powertools/*'
+
+    DynamoDBTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            BillingMode: PAY_PER_REQUEST
+            TableName: !Sub service-name-${Environment} # Update this
+            AttributeDefinitions:
+                - AttributeName: 'partition_key'
+                  AttributeType: 'S'
+                - AttributeName: 'sort_key'
+                  AttributeType: 'S'
+            KeySchema:
+                - AttributeName: 'partition_key'
+                  KeyType: 'HASH'
+                - AttributeName: 'sort_key'
+                  KeyType: 'RANGE'
+
+Outputs:
+    APIGatewayV1Endpoint:
+        Description: API Gateway V1 endpoint URL
+        Value: !Sub 'https://${APIGatewayV1}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/'
+    APIGatewayV2Endpoint:
+        Description: API Gateway V2 endpoint URL
+        Value: !Sub 'https://${APIGatewayV2}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/'
