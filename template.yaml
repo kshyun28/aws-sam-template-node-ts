@@ -9,7 +9,7 @@ Globals:
         Timeout: 29
         Layers:
             - arn:aws:lambda:ap-southeast-1:499202726088:layer:CommonNodeModulesLayer:1
-            - arn:aws:lambda:ap-southeast-1:499202726088:layer:CommonLayer:1
+            - arn:aws:lambda:ap-southeast-1:499202726088:layer:CommonLayer:2
         MemorySize: 128
         Environment:
             Variables:
