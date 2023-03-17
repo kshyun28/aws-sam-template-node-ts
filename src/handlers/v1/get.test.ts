@@ -1,4 +1,5 @@
-import AWS from 'aws-sdk-mock';
+import { mock, restore } from 'aws-sdk-mock';
+
 import { lambdaHandler } from './get';
 
 describe('Unit test for get handler', function () {
@@ -53,7 +54,7 @@ describe('Unit test for get handler', function () {
             stageVariables: {},
         };
 
-        AWS.mock('DynamoDB.DocumentClient', 'scan', (params: any, callback: any) => {
+        mock('DynamoDB.DocumentClient', 'scan', (params: any, callback: any) => {
             callback(null, { pk: 'foo', sk: 'bar' });
         });
         const result = await lambdaHandler(event);
@@ -65,6 +66,6 @@ describe('Unit test for get handler', function () {
             }),
         );
 
-        AWS.restore('DynamoDB.DocumentClient');
+        restore('DynamoDB.DocumentClient');
     });
 });

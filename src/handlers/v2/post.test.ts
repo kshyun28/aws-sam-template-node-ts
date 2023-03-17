@@ -1,4 +1,5 @@
-import AWS from 'aws-sdk-mock';
+import { mock, restore } from 'aws-sdk-mock';
+
 import { lambdaHandler } from './post';
 
 describe('Unit test for post handler', function () {
@@ -53,7 +54,7 @@ describe('Unit test for post handler', function () {
             stageVariables: {},
         };
 
-        AWS.mock('DynamoDB.DocumentClient', 'put', (params: any, callback: any) => {
+        mock('DynamoDB.DocumentClient', 'put', (params: any, callback: any) => {
             callback(null, null);
         });
         const result = await lambdaHandler(event);
@@ -65,10 +66,10 @@ describe('Unit test for post handler', function () {
                 data: {
                     partitionKey: 'PK',
                     sortKey: 'SK',
-                }
+                },
             }),
         );
 
-        AWS.restore('DynamoDB.DocumentClient');
+        restore('DynamoDB.DocumentClient');
     });
 });

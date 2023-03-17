@@ -1,6 +1,7 @@
 # sam-template-node
 
 This project is a template for quickly setting up a boilerplate for new APIs. It contains the source code and supporting files for a serverless application using AWS SAM. It includes the following files and folders.
+
 -   src - Code for the application's Lambda function written in TypeScript.
 -   layers - Shared code and dependencies via Lambda layers.
 -   samconfig.toml - Config for deployment in AWS.
@@ -80,7 +81,6 @@ sam sync --stack-name test-dev --watch
 
 You can find more information and examples about using `sam sync` in the [SAM CLI Documentation](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-cli-command-reference-sam-sync.html).
 
-
 ### Using AWS SAM CLI for deployments
 
 Build your application with the `sam build` command. Builds are required everytime you make a change to your code before testing or deploying to AWS.
@@ -94,7 +94,6 @@ Deploy the application.
 ```bash
 sam deploy --config-env develop --parameter-overrides Environment=develop
 ```
-
 
 ### Fetch, tail, and filter Lambda function logs
 

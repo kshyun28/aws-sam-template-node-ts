@@ -1,11 +1,12 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import DynamoDB from 'aws-sdk/clients/dynamodb';
-import middy from '@middy/core';
-import { generateResponse } from '/opt/nodejs/utils/jsonResponse';
-import { logger, metrics, tracer } from '/opt/nodejs/utils/powertools';
-import { captureLambdaHandler } from '@aws-lambda-powertools/tracer';
 import { injectLambdaContext } from '@aws-lambda-powertools/logger';
 import { logMetrics } from '@aws-lambda-powertools/metrics';
+import { captureLambdaHandler } from '@aws-lambda-powertools/tracer';
+import middy from '@middy/core';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+
+import { generateResponse } from '/opt/nodejs/utils/jsonResponse';
+import { logger, metrics, tracer } from '/opt/nodejs/utils/powertools';
 
 /**
  *
@@ -19,12 +20,12 @@ import { logMetrics } from '@aws-lambda-powertools/metrics';
 
 export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const tableName = process.env.TABLE_NAME;
-    const docClient = new DynamoDB.DocumentClient();
+    const docClient = new DocumentClient();
     const headers = {
         'Access-Control-Allow-Headers': '*',
         'Access-Control-Allow-Methods': 'POST',
         'Access-Control-Allow-Origin': '*',
-    }
+    };
     let response: APIGatewayProxyResult;
 
     try {
@@ -39,18 +40,20 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
         const body = JSON.parse(event.body);
         const { partitionKey, sortKey } = body;
 
-        await docClient.put({
-            TableName: tableName,
-            Item: { partition_key: partitionKey, sort_key: sortKey },
-        }).promise();
+        await docClient
+            .put({
+                TableName: tableName,
+                Item: { partition_key: partitionKey, sort_key: sortKey },
+            })
+            .promise();
 
-        response = generateResponse(200, headers, 'Success', body);;
+        response = generateResponse(200, headers, 'Success', body);
     } catch (err: unknown) {
         logger.error('Error', {
             error: err,
         });
         const message = err instanceof Error ? err.message : 'some error happened';
-        response = generateResponse(500, headers, message, null);;
+        response = generateResponse(500, headers, message, null);
     }
 
     return response;
