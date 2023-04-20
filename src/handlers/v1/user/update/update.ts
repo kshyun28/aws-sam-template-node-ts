@@ -26,7 +26,7 @@ import { logger, metrics, tracer } from '/opt/nodejs/utils/powertools';
 export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const headers = {
         'Access-Control-Allow-Headers': '*',
-        'Access-Control-Allow-Methods': 'POST',
+        'Access-Control-Allow-Methods': 'PATCH',
         'Access-Control-Allow-Origin': '*',
     };
     let response: APIGatewayProxyResult;
@@ -41,9 +41,9 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
         const user = {
             verified,
         };
-        await userService.updateUser(userId, user);
+        const updatedUser = await userService.updateUser(userId, user);
 
-        response = generateResponse(200, headers, 'Successfully updated user', user);
+        response = generateResponse(200, headers, 'Successfully updated user', updatedUser);
     } catch (error: unknown) {
         const serializedError = error instanceof BaseError ? error.serializeErrors() : null;
         logger.error('Failed to update user', { error, serializedError });

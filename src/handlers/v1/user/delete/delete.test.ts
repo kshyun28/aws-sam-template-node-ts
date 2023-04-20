@@ -3,11 +3,11 @@ import { APIGatewayEvent } from 'aws-lambda';
 import { config } from 'src/config/config';
 import { userService } from 'src/services';
 
-import { lambdaHandler } from './get';
+import { lambdaHandler } from './delete';
 
 let apiGatewayEvent: APIGatewayEvent;
 
-describe('Get User: GET /users/{userId}', function () {
+describe('Delete User: DELETE /users/{userId}', function () {
     beforeEach(() => {
         // Initialize process.env in jest.config.ts
         process.env = { ...config };
@@ -16,7 +16,7 @@ describe('Get User: GET /users/{userId}', function () {
         apiGatewayEvent = {
             resource: '/users/{userId}',
             path: '/users/{userId}',
-            httpMethod: 'GET',
+            httpMethod: 'DELETE',
             headers: {},
             multiValueHeaders: {},
             queryStringParameters: null,
@@ -28,7 +28,7 @@ describe('Get User: GET /users/{userId}', function () {
                 resourceId: '123456',
                 authorizer: {},
                 resourcePath: '/users/{userId}',
-                httpMethod: 'GET',
+                httpMethod: 'DELETE',
                 path: '/users/{userId}',
                 accountId: '123456789012',
                 protocol: 'HTTP/1.1',
@@ -69,34 +69,27 @@ describe('Get User: GET /users/{userId}', function () {
         jest.restoreAllMocks();
     });
 
-    it('should get a user', async () => {
+    it('should delete a user', async () => {
         // Set variables
         const userId = '442bf4eb-4d25-49fe-812b-02687f7fa109';
-        const user = {
-            created: 1681977346831,
-            verified: true,
-            firstName: 'Jasper',
-            lastName: 'Gabriel',
-            userId,
-        };
         apiGatewayEvent.pathParameters = {
             userId,
         };
 
         // Mock functions
-        jest.spyOn(userService, 'getUser').mockReturnValue(Promise.resolve(user));
+        jest.spyOn(userService, 'deleteUser').mockReturnValue(Promise.resolve());
 
         const result = await lambdaHandler(apiGatewayEvent);
         expect(result.statusCode).toEqual(200);
         expect(result.headers).toEqual({
             'Access-Control-Allow-Headers': '*',
-            'Access-Control-Allow-Methods': 'GET',
+            'Access-Control-Allow-Methods': 'DELETE',
             'Access-Control-Allow-Origin': '*',
         });
         expect(result.body).toEqual(
             JSON.stringify({
-                message: 'User details',
-                data: user,
+                message: 'Successfully deleted user',
+                data: null,
             }),
         );
     });

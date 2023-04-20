@@ -1,24 +1,38 @@
-import { mock, restore } from 'aws-sdk-mock';
+import { APIGatewayEvent } from 'aws-lambda';
+
+import { config } from 'src/config/config';
+import { userService } from 'src/services';
 
 import { lambdaHandler } from './get';
 
-describe('Unit test for get handler', function () {
-    it('verifies successful response', async () => {
-        const event = {
-            httpMethod: 'get',
-            body: '',
+let apiGatewayEvent: APIGatewayEvent;
+
+describe('Get User: GET /users/{userId}', function () {
+    beforeEach(() => {
+        // Initialize process.env in jest.config.ts
+        process.env = { ...config };
+
+        // Initialize API Gateway Event
+        apiGatewayEvent = {
+            resource: '/users/{userId}',
+            path: '/users/{userId}',
+            httpMethod: 'GET',
             headers: {},
-            isBase64Encoded: false,
             multiValueHeaders: {},
-            multiValueQueryStringParameters: {},
-            path: '/get',
-            pathParameters: {},
-            queryStringParameters: {},
+            queryStringParameters: null,
+            multiValueQueryStringParameters: null,
+            pathParameters: null,
+            stageVariables: null,
+            isBase64Encoded: false,
             requestContext: {
-                accountId: '123456789012',
-                apiId: '1234',
+                resourceId: '123456',
                 authorizer: {},
-                httpMethod: 'get',
+                resourcePath: '/users/{userId}',
+                httpMethod: 'GET',
+                path: '/users/{userId}',
+                accountId: '123456789012',
+                protocol: 'HTTP/1.1',
+                stage: 'develop',
                 identity: {
                     accessKey: '',
                     accountId: '',
@@ -42,30 +56,48 @@ describe('Unit test for get handler', function () {
                     userAgent: '',
                     userArn: '',
                 },
-                path: '/get',
-                protocol: 'HTTP/1.1',
                 requestId: 'c6af9ac6-7b61-11e6-9a41-93e8deadbeef',
                 requestTimeEpoch: 1428582896000,
-                resourceId: '123456',
-                resourcePath: '/',
-                stage: 'dev',
+                apiId: '1234',
             },
-            resource: '',
-            stageVariables: {},
+            body: '',
+        };
+    });
+
+    afterEach(() => {
+        // Restore all mocks created from 'jest.spyOn()'
+        jest.restoreAllMocks();
+    });
+
+    it('should get a user', async () => {
+        // Set variables
+        const userId = '442bf4eb-4d25-49fe-812b-02687f7fa109';
+        const user = {
+            created: 1681977346831,
+            verified: true,
+            firstName: 'Jasper',
+            lastName: 'Gabriel',
+            userId,
+        };
+        apiGatewayEvent.pathParameters = {
+            userId,
         };
 
-        mock('DynamoDB.DocumentClient', 'scan', (params: any, callback: any) => {
-            callback(null, { pk: 'foo', sk: 'bar' });
-        });
-        const result = await lambdaHandler(event);
+        // Mock functions
+        jest.spyOn(userService, 'getUser').mockReturnValue(Promise.resolve(user));
 
+        const result = await lambdaHandler(apiGatewayEvent);
         expect(result.statusCode).toEqual(200);
+        expect(result.headers).toEqual({
+            'Access-Control-Allow-Headers': '*',
+            'Access-Control-Allow-Methods': 'GET',
+            'Access-Control-Allow-Origin': '*',
+        });
         expect(result.body).toEqual(
             JSON.stringify({
-                message: 'Success',
+                message: 'User details',
+                data: user,
             }),
         );
-
-        restore('DynamoDB.DocumentClient');
     });
 });

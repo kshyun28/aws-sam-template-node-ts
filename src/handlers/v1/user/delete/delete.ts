@@ -23,7 +23,7 @@ import { logger, metrics, tracer } from '/opt/nodejs/utils/powertools';
 export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const headers = {
         'Access-Control-Allow-Headers': '*',
-        'Access-Control-Allow-Methods': 'GET',
+        'Access-Control-Allow-Methods': 'DELETE',
         'Access-Control-Allow-Origin': '*',
     };
     let response: APIGatewayProxyResult;
@@ -33,9 +33,9 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
         if (!userId) {
             throw new BadRequestError('User ID is undefined');
         }
-        const user = await userService.deleteUser(userId);
+        await userService.deleteUser(userId);
 
-        response = generateResponse(200, headers, 'Successfully deleted user', user);
+        response = generateResponse(200, headers, 'Successfully deleted user', null);
     } catch (error: unknown) {
         const serializedError = error instanceof BaseError ? error.serializeErrors() : null;
         logger.error('Failed to delete user', { error, serializedError });

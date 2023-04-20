@@ -12,12 +12,13 @@
         "lint:fix": "npm run lint -- --fix",
         "format": "prettier --write .",
         "build": "rm -rf dist && tsc",
-        "test": "jest"
+        "test": "export POWERTOOLS_DEV=true && npx jest --silent --passWithNoTests"
     },
     "devDependencies": {
         "@aws-lambda-powertools/logger": "^1.6.0",
         "@aws-lambda-powertools/metrics": "^1.5.0",
         "@aws-lambda-powertools/tracer": "^1.5.0",
+        "@babel/preset-typescript": "^7.21.4",
         "@commitlint/cli": "^17.1.2",
         "@commitlint/config-conventional": "^17.1.0",
         "@middy/core": "^4.0.0",

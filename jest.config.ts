@@ -13,11 +13,7 @@ const config: Config = {
     moduleNameMapper: {
         '/opt/nodejs/(.*)': '<rootDir>/layers/common-layer/src/$1',
     },
+    modulePaths: ['<rootDir>'],
 };
-
-process.env = Object.assign(process.env, {
-    TABLE_NAME: 'sample_table',
-    LOG_LEVEL: 'ERROR',
-});
 
 export default config;
