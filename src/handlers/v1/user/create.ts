@@ -9,6 +9,8 @@ import { userService } from 'src/services';
 
 import { generateResponse } from '/opt/nodejs/utils/jsonResponse';
 import { logger, metrics, tracer } from '/opt/nodejs/utils/powertools';
+import { BaseError } from 'src/errors/BaseError';
+import { BadRequestError, InternalServerError } from 'src/errors';
 
 /**
  *
@@ -30,7 +32,7 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
 
     try {
         if (!event.body) {
-            throw Error('request body is null');
+            throw new BadRequestError('Request body is null');
         }
 
         const body = JSON.parse(event.body);
@@ -45,12 +47,12 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
         await userService.createUser(user);
 
         response = generateResponse(200, headers, 'Successfully created user', user);
-    } catch (err: unknown) {
-        logger.error('Error', {
-            error: err,
-        });
-        const message = err instanceof Error ? err.message : 'some error happened';
-        response = generateResponse(500, headers, message, null);
+    } catch (error: unknown) {
+        const serializedError = error instanceof BaseError ? error.serializeErrors() : null;
+        logger.error('Failed to get user', { error, serializedError });
+        const message = error instanceof BaseError ? error.message : 'Some error happened';
+        const statusCode = error instanceof BaseError ? error.statusCode : 500;
+        response = generateResponse(statusCode, headers, message, null);
     }
 
     return response;

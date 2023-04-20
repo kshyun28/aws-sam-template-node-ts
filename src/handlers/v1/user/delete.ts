@@ -3,6 +3,8 @@ import { logMetrics } from '@aws-lambda-powertools/metrics';
 import { captureLambdaHandler } from '@aws-lambda-powertools/tracer';
 import middy from '@middy/core';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { BadRequestError } from 'src/errors';
+import { BaseError } from 'src/errors/BaseError';
 
 import { userService } from 'src/services';
 
@@ -29,17 +31,17 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
     try {
         const userId = event.pathParameters?.userId;
         if (!userId) {
-            throw Error('User id is undefined');
+            throw new BadRequestError('User ID is undefined');
         }
         const user = await userService.deleteUser(userId);
 
         response = generateResponse(200, headers, 'Successfully deleted user', user);
-    } catch (err: unknown) {
-        logger.error('Error', {
-            error: err,
-        });
-        const message = err instanceof Error ? err.message : 'some error happened';
-        response = generateResponse(500, headers, message, null);
+    } catch (error: unknown) {
+        const serializedError = error instanceof BaseError ? error.serializeErrors() : null;
+        logger.error('Failed to get user', { error, serializedError });
+        const message = error instanceof BaseError ? error.message : 'Some error happened';
+        const statusCode = error instanceof BaseError ? error.statusCode : 500;
+        response = generateResponse(statusCode, headers, message, null);
     }
 
     return response;

@@ -1,5 +1,7 @@
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 
+import { NotFoundError } from 'src/errors';
+
 import { config } from '../config/config';
 import { User, UserIdIndex } from '../models';
 
@@ -22,10 +24,10 @@ export default class UserService {
             })
             .promise();
         if (!userIdIndex.Items) {
-            throw new Error('User does not exist');
+            throw new NotFoundError('User does not exist');
         }
         if (userIdIndex.Items.length === 0) {
-            throw new Error('User does not exist');
+            throw new NotFoundError('User does not exist');
         }
         logger.info('getUserByIndex', { data: userIdIndex });
         return userIdIndex.Items[0] as UserIdIndex;
@@ -63,7 +65,7 @@ export default class UserService {
             .promise();
         logger.info('getUser', { data: { userId, user } });
         if (!user.Item) {
-            throw new Error('User does not exist');
+            throw new NotFoundError('User does not exist');
         }
         return user.Item as User;
     }
