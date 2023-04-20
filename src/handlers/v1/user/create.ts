@@ -3,7 +3,9 @@ import { logMetrics } from '@aws-lambda-powertools/metrics';
 import { captureLambdaHandler } from '@aws-lambda-powertools/tracer';
 import middy from '@middy/core';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { v4 } from 'uuid';
+
+import { userService } from 'src/services';
 
 import { generateResponse } from '/opt/nodejs/utils/jsonResponse';
 import { logger, metrics, tracer } from '/opt/nodejs/utils/powertools';
@@ -17,38 +19,32 @@ import { logger, metrics, tracer } from '/opt/nodejs/utils/powertools';
  * @returns {Object} object - API Gateway Lambda Proxy Output Format
  *
  */
+
 export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    const tableName = process.env.TABLE_NAME;
-    const docClient = new DocumentClient();
     const headers = {
         'Access-Control-Allow-Headers': '*',
-        'Access-Control-Allow-Methods': 'GET',
+        'Access-Control-Allow-Methods': 'POST',
         'Access-Control-Allow-Origin': '*',
     };
     let response: APIGatewayProxyResult;
 
     try {
-        logger.info('Sample get function logger');
-        /*
-            Access path parameters:
-            - localhost:3000/get/{id}
-            - event.pathParameters.id
-
-            Access query string parameters:
-            - localhost:3000/get/{id}?foo=bar
-            - event.queryStringParameters
-        */
-        if (!tableName) {
-            throw Error('tablename undefined');
+        if (!event.body) {
+            throw Error('request body is null');
         }
-        const data = await docClient
-            .scan({
-                TableName: tableName,
-            })
-            .promise();
-        const items = data.Items;
 
-        response = generateResponse(200, headers, 'Success', items);
+        const body = JSON.parse(event.body);
+        const { firstName, lastName } = body;
+        const user = {
+            userId: v4(),
+            created: Date.now(),
+            firstName,
+            lastName,
+            verified: false,
+        };
+        await userService.createUser(user);
+
+        response = generateResponse(200, headers, 'Successfully created user', user);
     } catch (err: unknown) {
         logger.error('Error', {
             error: err,

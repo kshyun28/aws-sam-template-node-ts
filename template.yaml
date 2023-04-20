@@ -49,7 +49,7 @@ Resources:
     #     Properties:
     #         DomainName: !Ref EnvDomain
     #         ApiId: !Ref APIGatewayV1
-    #         ApiMappingKey: v1/base-path # Update this
+    #         ApiMappingKey: v1 # Update this
     #         Stage: !Ref Environment
 
     APIGatewayV2:
@@ -67,21 +67,53 @@ Resources:
     #     Properties:
     #         DomainName: !Ref EnvDomain
     #         ApiId: !Ref APIGatewayV2
-    #         ApiMappingKey: v2/base-path # Update this
+    #         ApiMappingKey: v2 # Update this
     #         Stage: !Ref Environment
 
-    GetV1Function:
+    GetAllUsersV1Function:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: !Sub
-                - ${StackName}-GetV1
+                - ${StackName}-GetAllUsersV1
                 - { StackName: !Ref AWS::StackName }
-            Description: Get from DynamoDB
+            Description: Get all users v1
             Events:
                 API:
                     Type: Api
                     Properties:
-                        Path: /{id}
+                        Path: /users
+                        Method: get
+                        RestApiId: !Ref APIGatewayV1
+            Handler: getAll.handler
+            Policies:
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref UserTable
+        Metadata: # Manage esbuild properties
+            BuildArchitecture: arm64
+            BuildMethod: esbuild
+            BuildProperties:
+                Minify: false
+                Target: 'es2020'
+                EntryPoints:
+                    - src/handlers/v1/user/getAll.ts
+                External: # Define external dependencies to be loaded as Layers
+                    - aws-sdk
+                    - /opt/nodejs/utils/*
+                    - '@middy/core'
+                    - '@aws-lambda-powertools/*'
+
+    GetUserV1Function:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: !Sub
+                - ${StackName}-GetUserV1
+                - { StackName: !Ref AWS::StackName }
+            Description: Get user v1
+            Events:
+                API:
+                    Type: Api
+                    Properties:
+                        Path: /users/{userId}
                         Method: get
                         RestApiId: !Ref APIGatewayV1
             Handler: get.handler
@@ -95,28 +127,28 @@ Resources:
                 Minify: false
                 Target: 'es2020'
                 EntryPoints:
-                    - src/handlers/v1/get.ts
+                    - src/handlers/v1/user/get.ts
                 External: # Define external dependencies to be loaded as Layers
                     - aws-sdk
                     - /opt/nodejs/utils/*
                     - '@middy/core'
                     - '@aws-lambda-powertools/*'
 
-    PostV1Function:
+    CreateUserV1Function:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: !Sub
-                - ${StackName}-PostV1
+                - ${StackName}-CreateUserV1
                 - { StackName: !Ref AWS::StackName }
-            Description: Post to DynamoDB
+            Description: Create user v1
             Events:
                 API:
                     Type: Api
                     Properties:
-                        Path: /
+                        Path: /users
                         Method: post
                         RestApiId: !Ref APIGatewayV1
-            Handler: post.handler
+            Handler: create.handler
             Policies:
                 - DynamoDBCrudPolicy:
                       TableName: !Ref UserTable
@@ -126,25 +158,90 @@ Resources:
                 Minify: false
                 Target: 'es2020'
                 EntryPoints:
-                    - src/handlers/v1/post.ts
+                    - src/handlers/v1/user/create.ts
+                External: # Define external dependencies to be loaded as Layers
+                    - aws-sdk
+                    - /opt/nodejs/utils/*
+                    - '@middy/core'
+                    - '@aws-lambda-powertools/*'
+                    - uuid
+
+    UpdateUserV1Function:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: !Sub
+                - ${StackName}-UpdateUserV1
+                - { StackName: !Ref AWS::StackName }
+            Description: Update user v1
+            Events:
+                API:
+                    Type: Api
+                    Properties:
+                        Path: /users/{userId}
+                        Method: patch
+                        RestApiId: !Ref APIGatewayV1
+            Handler: update.handler
+            Policies:
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref UserTable
+        Metadata: # Manage esbuild properties
+            BuildMethod: esbuild
+            BuildProperties:
+                Minify: false
+                Target: 'es2020'
+                EntryPoints:
+                    - src/handlers/v1/user/update.ts
+                External: # Define external dependencies to be loaded as Layers
+                    - aws-sdk
+                    - /opt/nodejs/utils/*
+                    - '@middy/core'
+                    - '@aws-lambda-powertools/*'
+                    - uuid
+
+    DeleteUserV1Function:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: !Sub
+                - ${StackName}-DeleteUserV1
+                - { StackName: !Ref AWS::StackName }
+            Description: Delete user v1
+            Events:
+                API:
+                    Type: Api
+                    Properties:
+                        Path: /users/{userId}
+                        Method: delete
+                        RestApiId: !Ref APIGatewayV1
+            Handler: delete.handler
+            Policies:
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref UserTable
+        Metadata: # Manage esbuild properties
+            BuildArchitecture: arm64
+            BuildMethod: esbuild
+            BuildProperties:
+                Minify: false
+                Target: 'es2020'
+                EntryPoints:
+                    - src/handlers/v1/user/delete.ts
                 External: # Define external dependencies to be loaded as Layers
                     - aws-sdk
                     - /opt/nodejs/utils/*
                     - '@middy/core'
                     - '@aws-lambda-powertools/*'
 
-    GetV2Function:
+    GetUserV2Function:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: !Sub
-                - ${StackName}-GetV2
+                - ${StackName}-GetUserV2
                 - { StackName: !Ref AWS::StackName }
-            Description: Get from DynamoDB
+            Description: Get user from DynamoDB v2
             Events:
                 API:
                     Type: Api
                     Properties:
-                        Path: /{id}
+                        Path: /users/{id}
                         Method: get
                         RestApiId: !Ref APIGatewayV2
             Handler: get.handler
@@ -165,18 +262,18 @@ Resources:
                     - '@middy/core'
                     - '@aws-lambda-powertools/*'
 
-    PostV2Function:
+    CreateUserV2Function:
         Type: AWS::Serverless::Function
         Properties:
             FunctionName: !Sub
-                - ${StackName}-PostV2
+                - ${StackName}-CreateUserV2
                 - { StackName: !Ref AWS::StackName }
-            Description: Post to DynamoDB
+            Description: Save user to DynamoDB v2
             Events:
                 API:
                     Type: Api
                     Properties:
-                        Path: /
+                        Path: /users
                         Method: post
                         RestApiId: !Ref APIGatewayV2
             Handler: post.handler
@@ -214,6 +311,10 @@ Resources:
             GlobalSecondaryIndexes:
                 - IndexName: userIdIndex
                   KeySchema:
+                      - AttributeName: userId
+                        KeyType: HASH
+                  Projection:
+                      ProjectionType: KEYS_ONLY
 
 Outputs:
     APIGatewayV1Endpoint:

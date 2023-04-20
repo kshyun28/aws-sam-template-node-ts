@@ -3,7 +3,8 @@ import { logMetrics } from '@aws-lambda-powertools/metrics';
 import { captureLambdaHandler } from '@aws-lambda-powertools/tracer';
 import middy from '@middy/core';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+
+import { userService } from 'src/services';
 
 import { generateResponse } from '/opt/nodejs/utils/jsonResponse';
 import { logger, metrics, tracer } from '/opt/nodejs/utils/powertools';
@@ -19,8 +20,6 @@ import { logger, metrics, tracer } from '/opt/nodejs/utils/powertools';
  */
 
 export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    const tableName = process.env.TABLE_NAME;
-    const docClient = new DocumentClient();
     const headers = {
         'Access-Control-Allow-Headers': '*',
         'Access-Control-Allow-Methods': 'POST',
@@ -29,25 +28,21 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
     let response: APIGatewayProxyResult;
 
     try {
-        logger.info('Sample post function logger');
+        const userId = event.pathParameters?.userId;
+        if (!userId) {
+            throw Error('User id is undefined');
+        }
         if (!event.body) {
             throw Error('request body is null');
         }
-        if (!tableName) {
-            throw Error('tablename undefined');
-        }
-
         const body = JSON.parse(event.body);
-        const { partitionKey, sortKey } = body;
+        const { verified } = body;
+        const user = {
+            verified,
+        };
+        await userService.updateUser(userId, user);
 
-        await docClient
-            .put({
-                TableName: tableName,
-                Item: { partition_key: partitionKey, sort_key: sortKey },
-            })
-            .promise();
-
-        response = generateResponse(200, headers, 'Success', body);
+        response = generateResponse(200, headers, 'Successfully updated user', user);
     } catch (err: unknown) {
         logger.error('Error', {
             error: err,
