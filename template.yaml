@@ -13,7 +13,7 @@ Globals:
         MemorySize: 128
         Environment:
             Variables:
-                TABLE_NAME: !Ref DynamoDBTable
+                TABLE_NAME: !Ref UserTable
                 POWERTOOLS_SERVICE_NAME: service-name # Update this
                 POWERTOOLS_METRICS_NAMESPACE: service-name # Update this
                 POWERTOOLS_LOGGER_LOG_EVENT: false # Set to false in production
@@ -87,7 +87,7 @@ Resources:
             Handler: get.handler
             Policies:
                 - DynamoDBCrudPolicy:
-                      TableName: !Ref DynamoDBTable
+                      TableName: !Ref UserTable
         Metadata: # Manage esbuild properties
             BuildArchitecture: arm64
             BuildMethod: esbuild
@@ -119,7 +119,7 @@ Resources:
             Handler: post.handler
             Policies:
                 - DynamoDBCrudPolicy:
-                      TableName: !Ref DynamoDBTable
+                      TableName: !Ref UserTable
         Metadata: # Manage esbuild properties
             BuildMethod: esbuild
             BuildProperties:
@@ -150,7 +150,7 @@ Resources:
             Handler: get.handler
             Policies:
                 - DynamoDBCrudPolicy:
-                      TableName: !Ref DynamoDBTable
+                      TableName: !Ref UserTable
         Metadata: # Manage esbuild properties
             BuildArchitecture: arm64
             BuildMethod: esbuild
@@ -182,7 +182,7 @@ Resources:
             Handler: post.handler
             Policies:
                 - DynamoDBCrudPolicy:
-                      TableName: !Ref DynamoDBTable
+                      TableName: !Ref UserTable
         Metadata: # Manage esbuild properties
             BuildMethod: esbuild
             BuildProperties:
@@ -196,21 +196,24 @@ Resources:
                     - '@middy/core'
                     - '@aws-lambda-powertools/*'
 
-    DynamoDBTable:
+    UserTable:
         Type: AWS::DynamoDB::Table
         Properties:
             BillingMode: PAY_PER_REQUEST
-            TableName: !Sub service-name-${Environment} # Update this
+            TableName: !Sub UserTable-${Environment}
             AttributeDefinitions:
-                - AttributeName: 'partition_key'
+                - AttributeName: 'userId' # PK
                   AttributeType: 'S'
-                - AttributeName: 'sort_key'
-                  AttributeType: 'S'
+                - AttributeName: 'created' # SK
+                  AttributeType: 'N'
             KeySchema:
-                - AttributeName: 'partition_key'
+                - AttributeName: 'userId' # PK
                   KeyType: 'HASH'
-                - AttributeName: 'sort_key'
+                - AttributeName: 'created' # SK
                   KeyType: 'RANGE'
+            GlobalSecondaryIndexes:
+                - IndexName: userIdIndex
+                  KeySchema:
 
 Outputs:
     APIGatewayV1Endpoint:
