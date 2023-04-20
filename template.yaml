@@ -40,7 +40,7 @@ Resources:
             StageName: !Ref Environment
             Cors:
                 AllowHeaders: "'*'"
-                AllowMethods: "'POST, GET, OPTIONS'"
+                AllowMethods: "'POST, GET, PUT, PATCH, DELETE, OPTIONS'"
                 AllowOrigin: "'*'"
 
     # APIGatewayMappingV1:
@@ -58,7 +58,7 @@ Resources:
             StageName: !Ref Environment
             Cors:
                 AllowHeaders: "'*'"
-                AllowMethods: "'POST, GET, OPTIONS'"
+                AllowMethods: "'POST, GET, PUT, PATCH, DELETE, OPTIONS'"
                 AllowOrigin: "'*'"
 
     # APIGatewayMappingV2:
