@@ -3,9 +3,9 @@ import { logMetrics } from '@aws-lambda-powertools/metrics';
 import { captureLambdaHandler } from '@aws-lambda-powertools/tracer';
 import middy from '@middy/core';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+
 import { BadRequestError } from 'src/errors';
 import { BaseError } from 'src/errors/BaseError';
-
 import { userService } from 'src/services';
 
 import { generateResponse } from '/opt/nodejs/utils/jsonResponse';
@@ -38,10 +38,11 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
         response = generateResponse(200, headers, 'Successfully deleted user', user);
     } catch (error: unknown) {
         const serializedError = error instanceof BaseError ? error.serializeErrors() : null;
-        logger.error('Failed to get user', { error, serializedError });
+        logger.error('Failed to delete user', { error, serializedError });
         const message = error instanceof BaseError ? error.message : 'Some error happened';
         const statusCode = error instanceof BaseError ? error.statusCode : 500;
-        response = generateResponse(statusCode, headers, message, null);
+        const data = error instanceof BaseError ? error.data : null;
+        response = generateResponse(statusCode, headers, message, data);
     }
 
     return response;

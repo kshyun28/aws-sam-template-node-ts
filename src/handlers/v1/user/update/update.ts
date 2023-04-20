@@ -3,9 +3,13 @@ import { logMetrics } from '@aws-lambda-powertools/metrics';
 import { captureLambdaHandler } from '@aws-lambda-powertools/tracer';
 import middy from '@middy/core';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { BaseError } from 'src/errors/BaseError';
 
+import { BadRequestError } from 'src/errors';
+import { BaseError } from 'src/errors/BaseError';
 import { userService } from 'src/services';
+import { parseAndValidateRequestBody } from 'src/utils/validation';
+
+import { UpdateUserRequestSchema } from './update.validation';
 
 import { generateResponse } from '/opt/nodejs/utils/jsonResponse';
 import { logger, metrics, tracer } from '/opt/nodejs/utils/powertools';
@@ -22,21 +26,31 @@ import { logger, metrics, tracer } from '/opt/nodejs/utils/powertools';
 export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const headers = {
         'Access-Control-Allow-Headers': '*',
-        'Access-Control-Allow-Methods': 'GET',
+        'Access-Control-Allow-Methods': 'POST',
         'Access-Control-Allow-Origin': '*',
     };
     let response: APIGatewayProxyResult;
 
     try {
-        const users = await userService.getAllUsers();
+        const userId = event.pathParameters?.userId;
+        if (!userId) {
+            throw new BadRequestError('User ID is undefined');
+        }
+        const body = await parseAndValidateRequestBody(event, UpdateUserRequestSchema);
+        const { verified } = body;
+        const user = {
+            verified,
+        };
+        await userService.updateUser(userId, user);
 
-        response = generateResponse(200, headers, 'Users list', users);
+        response = generateResponse(200, headers, 'Successfully updated user', user);
     } catch (error: unknown) {
         const serializedError = error instanceof BaseError ? error.serializeErrors() : null;
-        logger.error('Failed to get user', { error, serializedError });
+        logger.error('Failed to update user', { error, serializedError });
         const message = error instanceof BaseError ? error.message : 'Some error happened';
         const statusCode = error instanceof BaseError ? error.statusCode : 500;
-        response = generateResponse(statusCode, headers, message, null);
+        const data = error instanceof BaseError ? error.data : null;
+        response = generateResponse(statusCode, headers, message, data);
     }
 
     return response;
