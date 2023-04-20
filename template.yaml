@@ -52,15 +52,17 @@ Resources:
     #         ApiMappingKey: v1 # Update this
     #         Stage: !Ref Environment
 
-    APIGatewayV2:
-        Type: AWS::Serverless::Api
-        Properties:
-            StageName: !Ref Environment
-            Cors:
-                AllowHeaders: "'*'"
-                AllowMethods: "'POST, GET, PUT, PATCH, DELETE, OPTIONS'"
-                AllowOrigin: "'*'"
-
+    # # V2 API Gateway are commented out and are here for the sake of showing how to apply versioning to API endpoints
+    # # Uncomment as necessary
+    # APIGatewayV2:
+    #     Type: AWS::Serverless::Api
+    #     Properties:
+    #         StageName: !Ref Environment
+    #         Cors:
+    #             AllowHeaders: "'*'"
+    #             AllowMethods: "'POST, GET, PUT, PATCH, DELETE, OPTIONS'"
+    #             AllowOrigin: "'*'"
+    #
     # APIGatewayMappingV2:
     #     Type: 'AWS::ApiGatewayV2::ApiMapping'
     #     DependsOn: APIGatewayStage # Fix for invalid stage identifier https://github.com/aws/serverless-application-model/issues/192
@@ -231,68 +233,70 @@ Resources:
                     - '@middy/core'
                     - '@aws-lambda-powertools/*'
 
-    GetUserV2Function:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName: !Sub
-                - ${StackName}-GetUserV2
-                - { StackName: !Ref AWS::StackName }
-            Description: Get user from DynamoDB v2
-            Events:
-                API:
-                    Type: Api
-                    Properties:
-                        Path: /users/{id}
-                        Method: get
-                        RestApiId: !Ref APIGatewayV2
-            Handler: get.handler
-            Policies:
-                - DynamoDBCrudPolicy:
-                      TableName: !Ref UserTable
-        Metadata: # Manage esbuild properties
-            BuildArchitecture: arm64
-            BuildMethod: esbuild
-            BuildProperties:
-                Minify: false
-                Target: 'es2020'
-                EntryPoints:
-                    - src/handlers/v2/get.ts
-                External: # Define external dependencies to be loaded as Layers
-                    - aws-sdk
-                    - /opt/nodejs/utils/*
-                    - '@middy/core'
-                    - '@aws-lambda-powertools/*'
+    # # V2 Lambda Functions are commented out and are here for the sake of showing how to apply versioning to API endpoints
+    # # Uncomment as necessary
+    # GetUserV2Function:
+    #     Type: AWS::Serverless::Function
+    #     Properties:
+    #         FunctionName: !Sub
+    #             - ${StackName}-GetUserV2
+    #             - { StackName: !Ref AWS::StackName }
+    #         Description: Get user from DynamoDB v2
+    #         Events:
+    #             API:
+    #                 Type: Api
+    #                 Properties:
+    #                     Path: /users/{id}
+    #                     Method: get
+    #                     RestApiId: !Ref APIGatewayV2
+    #         Handler: get.handler
+    #         Policies:
+    #             - DynamoDBCrudPolicy:
+    #                   TableName: !Ref UserTable
+    #     Metadata: # Manage esbuild properties
+    #         BuildArchitecture: arm64
+    #         BuildMethod: esbuild
+    #         BuildProperties:
+    #             Minify: false
+    #             Target: 'es2020'
+    #             EntryPoints:
+    #                 - src/handlers/v2/user/get/get.ts
+    #             External: # Define external dependencies to be loaded as Layers
+    #                 - aws-sdk
+    #                 - /opt/nodejs/utils/*
+    #                 - '@middy/core'
+    #                 - '@aws-lambda-powertools/*'
 
-    CreateUserV2Function:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName: !Sub
-                - ${StackName}-CreateUserV2
-                - { StackName: !Ref AWS::StackName }
-            Description: Save user to DynamoDB v2
-            Events:
-                API:
-                    Type: Api
-                    Properties:
-                        Path: /users
-                        Method: post
-                        RestApiId: !Ref APIGatewayV2
-            Handler: post.handler
-            Policies:
-                - DynamoDBCrudPolicy:
-                      TableName: !Ref UserTable
-        Metadata: # Manage esbuild properties
-            BuildMethod: esbuild
-            BuildProperties:
-                Minify: false
-                Target: 'es2020'
-                EntryPoints:
-                    - src/handlers/v2/post.ts
-                External: # Define external dependencies to be loaded as Layers
-                    - aws-sdk
-                    - /opt/nodejs/utils/*
-                    - '@middy/core'
-                    - '@aws-lambda-powertools/*'
+    # CreateUserV2Function:
+    #     Type: AWS::Serverless::Function
+    #     Properties:
+    #         FunctionName: !Sub
+    #             - ${StackName}-CreateUserV2
+    #             - { StackName: !Ref AWS::StackName }
+    #         Description: Save user to DynamoDB v2
+    #         Events:
+    #             API:
+    #                 Type: Api
+    #                 Properties:
+    #                     Path: /users
+    #                     Method: post
+    #                     RestApiId: !Ref APIGatewayV2
+    #         Handler: create.handler
+    #         Policies:
+    #             - DynamoDBCrudPolicy:
+    #                   TableName: !Ref UserTable
+    #     Metadata: # Manage esbuild properties
+    #         BuildMethod: esbuild
+    #         BuildProperties:
+    #             Minify: false
+    #             Target: 'es2020'
+    #             EntryPoints:
+    #                 - src/handlers/v2/user/create/create.ts
+    #             External: # Define external dependencies to be loaded as Layers
+    #                 - aws-sdk
+    #                 - /opt/nodejs/utils/*
+    #                 - '@middy/core'
+    #                 - '@aws-lambda-powertools/*'
 
     UserTable:
         Type: AWS::DynamoDB::Table

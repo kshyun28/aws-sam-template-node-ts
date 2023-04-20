@@ -1,6 +1,6 @@
 import { mock, restore } from 'aws-sdk-mock';
 
-import { lambdaHandler } from './post';
+import { lambdaHandler } from './create';
 
 describe('Unit test for post handler', function () {
     it('verifies successful response', async () => {

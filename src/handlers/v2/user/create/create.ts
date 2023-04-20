@@ -3,10 +3,17 @@ import { logMetrics } from '@aws-lambda-powertools/metrics';
 import { captureLambdaHandler } from '@aws-lambda-powertools/tracer';
 import middy from '@middy/core';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { v4 } from 'uuid';
+
+import { BaseError } from 'src/errors/BaseError';
+import { userService } from 'src/services';
 
 import { generateResponse } from '/opt/nodejs/utils/jsonResponse';
 import { logger, metrics, tracer } from '/opt/nodejs/utils/powertools';
+
+import { parseAndValidateRequestBody } from 'src/utils/validation';
+
+import { CreateUserRequestSchema } from './create.validation';
 
 /**
  *
@@ -17,10 +24,7 @@ import { logger, metrics, tracer } from '/opt/nodejs/utils/powertools';
  * @returns {Object} object - API Gateway Lambda Proxy Output Format
  *
  */
-
 export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    const tableName = process.env.TABLE_NAME;
-    const docClient = new DocumentClient();
     const headers = {
         'Access-Control-Allow-Headers': '*',
         'Access-Control-Allow-Methods': 'POST',
@@ -29,31 +33,25 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
     let response: APIGatewayProxyResult;
 
     try {
-        logger.info('Sample post function logger');
-        if (!event.body) {
-            throw Error('request body is null');
-        }
-        if (!tableName) {
-            throw Error('tablename undefined');
-        }
+        const body = await parseAndValidateRequestBody(event, CreateUserRequestSchema);
+        const { firstName, lastName } = body;
+        const user = {
+            userId: v4(),
+            created: Date.now(),
+            firstName,
+            lastName,
+            verified: false,
+        };
+        await userService.createUser(user);
 
-        const body = JSON.parse(event.body);
-        const { partitionKey, sortKey } = body;
-
-        await docClient
-            .put({
-                TableName: tableName,
-                Item: { partition_key: partitionKey, sort_key: sortKey },
-            })
-            .promise();
-
-        response = generateResponse(200, headers, 'Success', body);
-    } catch (err: unknown) {
-        logger.error('Error', {
-            error: err,
-        });
-        const message = err instanceof Error ? err.message : 'some error happened';
-        response = generateResponse(500, headers, message, null);
+        response = generateResponse(200, headers, 'Successfully created user', user);
+    } catch (error: unknown) {
+        const serializedError = error instanceof BaseError ? error.serializeErrors() : null;
+        logger.error('Failed to create user', { error, serializedError });
+        const message = error instanceof BaseError ? error.message : 'Some error happened';
+        const statusCode = error instanceof BaseError ? error.statusCode : 500;
+        const data = error instanceof BaseError ? error.data : null;
+        response = generateResponse(statusCode, headers, message, data);
     }
 
     return response;

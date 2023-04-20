@@ -3,7 +3,10 @@ import { logMetrics } from '@aws-lambda-powertools/metrics';
 import { captureLambdaHandler } from '@aws-lambda-powertools/tracer';
 import middy from '@middy/core';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+
+import { BadRequestError } from 'src/errors';
+import { BaseError } from 'src/errors/BaseError';
+import { userService } from 'src/services';
 
 import { generateResponse } from '/opt/nodejs/utils/jsonResponse';
 import { logger, metrics, tracer } from '/opt/nodejs/utils/powertools';
@@ -18,8 +21,6 @@ import { logger, metrics, tracer } from '/opt/nodejs/utils/powertools';
  *
  */
 export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    const tableName = process.env.TABLE_NAME;
-    const docClient = new DocumentClient();
     const headers = {
         'Access-Control-Allow-Headers': '*',
         'Access-Control-Allow-Methods': 'GET',
@@ -28,7 +29,6 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
     let response: APIGatewayProxyResult;
 
     try {
-        logger.info('Sample get function logger');
         /*
             Access path parameters:
             - localhost:3000/get/{id}
@@ -38,23 +38,20 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
             - localhost:3000/get/{id}?foo=bar
             - event.queryStringParameters
         */
-        if (!tableName) {
-            throw Error('tablename undefined');
+        const userId = event.pathParameters?.userId;
+        if (!userId) {
+            throw new BadRequestError('User ID is undefined');
         }
-        const data = await docClient
-            .scan({
-                TableName: tableName,
-            })
-            .promise();
-        const items = data.Items;
+        const user = await userService.getUser(userId);
 
-        response = generateResponse(200, headers, 'Success', items);
-    } catch (err: unknown) {
-        logger.error('Error', {
-            error: err,
-        });
-        const message = err instanceof Error ? err.message : 'some error happened';
-        response = generateResponse(500, headers, message, null);
+        response = generateResponse(200, headers, 'User details', user);
+    } catch (error: unknown) {
+        const serializedError = error instanceof BaseError ? error.serializeErrors() : null;
+        logger.error('Failed to get user', { error, serializedError });
+        const message = error instanceof BaseError ? error.message : 'Some error happened';
+        const statusCode = error instanceof BaseError ? error.statusCode : 500;
+        const data = error instanceof BaseError ? error.data : null;
+        response = generateResponse(statusCode, headers, message, data);
     }
 
     return response;

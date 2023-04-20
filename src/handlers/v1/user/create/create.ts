@@ -5,7 +5,6 @@ import middy from '@middy/core';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { v4 } from 'uuid';
 
-import { BadRequestError, InternalServerError } from 'src/errors';
 import { BaseError } from 'src/errors/BaseError';
 import { userService } from 'src/services';
 
