@@ -18,9 +18,9 @@ Globals:
                 POWERTOOLS_METRICS_NAMESPACE: service-name # Update this
                 POWERTOOLS_LOGGER_LOG_EVENT: false # Set to false in production
 Description: > # Update this
-    serverless-template
+    aws-sam-template-node-ts
 
-    SAM Template for serverless-template
+    SAM Template for aws-sam-template-node-ts
 
 Parameters:
     Environment:
