@@ -325,6 +325,6 @@ Outputs:
     APIGatewayV1Endpoint:
         Description: API Gateway V1 endpoint URL
         Value: !Sub 'https://${APIGatewayV1}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/'
-    APIGatewayV2Endpoint:
-        Description: API Gateway V2 endpoint URL
-        Value: !Sub 'https://${APIGatewayV2}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/'
+    # APIGatewayV2Endpoint:
+    #     Description: API Gateway V2 endpoint URL
+    #     Value: !Sub 'https://${APIGatewayV2}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/'
