@@ -1,0 +1,41 @@
+on:
+  push:
+    branches:
+      - develop
+      - staging
+      - production
+
+env:
+  BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+  AWS_REGION: ap-southeast-1
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout with submodules
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      # Setup Node.js, feel free to modify with your specific language
+      - uses: actions/setup-node@v3
+      # Configure AWS SAM CLI and AWS Credentials
+      - uses: aws-actions/setup-sam@v2
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::499202726088:role/GitHubActionsRole
+          role-session-name: aws-sam-template-node-ts-github-actions
+          aws-region: ${{ env.AWS_REGION }}
+      # sam build 
+      - run: sam build
+      # Run unit tests
+      - name: Install npm modules
+        run: npm install
+      - name: Run tests
+        run: yarn test
+      # sam deploy
+      - run: sam deploy --no-fail-on-empty-changeset --stack-name stack-name-${{ env.BRANCH_NAME }} --config-env ${{ env.BRANCH_NAME }} --parameter-overrides Environment=${{ env.BRANCH_NAME }}
