@@ -1,5 +1,7 @@
 # aws-sam-template-node-ts
 
+![Deployment](https://github.com/github/docs/actions/workflows/deployment.yml/badge.svg)
+
 This project is a template for quickly setting up a boilerplate for new APIs. It contains the source code and supporting files for a serverless application using AWS SAM. It includes the following files and folders.
 
 -   src - Code for the application's Lambda function written in TypeScript.
