@@ -75,9 +75,7 @@ Resources:
     GetAllUsersV1Function:
         Type: AWS::Serverless::Function
         Properties:
-            FunctionName: !Sub
-                - ${StackName}-GetAllUsersV1
-                - { StackName: !Ref AWS::StackName }
+            FunctionName: !Sub ${AWS::StackName}-GetAllUsersV1
             Description: Get all users v1
             Events:
                 API:
@@ -107,9 +105,7 @@ Resources:
     GetUserV1Function:
         Type: AWS::Serverless::Function
         Properties:
-            FunctionName: !Sub
-                - ${StackName}-GetUserV1
-                - { StackName: !Ref AWS::StackName }
+            FunctionName: !Sub ${AWS::StackName}-GetUserV1
             Description: Get user v1
             Events:
                 API:
@@ -139,9 +135,7 @@ Resources:
     CreateUserV1Function:
         Type: AWS::Serverless::Function
         Properties:
-            FunctionName: !Sub
-                - ${StackName}-CreateUserV1
-                - { StackName: !Ref AWS::StackName }
+            FunctionName: !Sub ${AWS::StackName}-CreateUserV1
             Description: Create user v1
             Events:
                 API:
@@ -172,9 +166,7 @@ Resources:
     UpdateUserV1Function:
         Type: AWS::Serverless::Function
         Properties:
-            FunctionName: !Sub
-                - ${StackName}-UpdateUserV1
-                - { StackName: !Ref AWS::StackName }
+            FunctionName: !Sub ${AWS::StackName}-UpdateUserV1
             Description: Update user v1
             Events:
                 API:
@@ -204,9 +196,7 @@ Resources:
     DeleteUserV1Function:
         Type: AWS::Serverless::Function
         Properties:
-            FunctionName: !Sub
-                - ${StackName}-DeleteUserV1
-                - { StackName: !Ref AWS::StackName }
+            FunctionName: !Sub ${AWS::StackName}-DeleteUserV1
             Description: Delete user v1
             Events:
                 API:
@@ -238,9 +228,7 @@ Resources:
     # GetUserV2Function:
     #     Type: AWS::Serverless::Function
     #     Properties:
-    #         FunctionName: !Sub
-    #             - ${StackName}-GetUserV2
-    #             - { StackName: !Ref AWS::StackName }
+    #         FunctionName: !Sub ${AWS::StackName}-GetUserV2
     #         Description: Get user from DynamoDB v2
     #         Events:
     #             API:
@@ -270,9 +258,7 @@ Resources:
     # CreateUserV2Function:
     #     Type: AWS::Serverless::Function
     #     Properties:
-    #         FunctionName: !Sub
-    #             - ${StackName}-CreateUserV2
-    #             - { StackName: !Ref AWS::StackName }
+    #         FunctionName: !Sub ${AWS::StackName}-CreateUserV2
     #         Description: Save user to DynamoDB v2
     #         Events:
     #             API:
